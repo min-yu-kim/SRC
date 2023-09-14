@@ -3,6 +3,8 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from matplotlib import pyplot as plt
+import sqlite3
+
 
 cmap = ['red', 'tomato', 'coral', 'darkorange', 'orange', 'gold', 'yellow', 'khaki', 'greenyellow', 'chartreuse',
         'limegreen', 'lime', 'turquoise', 'cyan', 'dodgerblue', 'deepskyblue', 'skyblue', 'steelblue', 'blue',
@@ -85,6 +87,8 @@ fig = go.Figure()
 result = []
 result2 = []
 select_coord = []
+result_df = pd.DataFrame(columns=['n', 'coords', 'theta'])
+
 # print(label)
 # pos_list = function.make_pos(point2, point3)
 # pos_list2 = function.make_pos(point1, point3)
@@ -96,6 +100,15 @@ for n in range(int(max(df_pd['label'])) + 1):
     plt.scatter(df_pd.loc[df_pd['label'] == n, 'x'], df_pd.loc[df_pd['label'] == n, 'y'], color=cmap[n], s=2, alpha=0.5)
     theta = function.pca(n_xy)
     coords = function.matrix_rotate(theta, n_xy)
+
+    new_data = {
+        'n': n,
+        'coords': coords,
+        'theta': theta
+    }
+
+    result_df = result_df.append(new_data, ignore_index=True)
+
     #print(coords)
     # function.convex_hull_plot(coords)
     rotated_coords = function.grid_rotate(coords, theta)
@@ -131,7 +144,7 @@ for n in range(int(max(df_pd['label'])) + 1):
     # print(new_coords)
     # point1 = np.array([754396, 1380805, 280])
 #
-    print("coords finish")
+    # print("coords finish")
     #pos = function.make_pos(point2, point3)
     #pos_list = pos[0]
     #crush = function.is_collision(new_coords, r, pos_list)
@@ -176,9 +189,28 @@ for n in range(int(max(df_pd['label'])) + 1):
 # #function.plot_corridor(p2, p3, r, fig)
 # # function.plot_corridor(surface_points, p2, p3, r, fig)
 #
+#print(result_df)
 fig.update_layout(scene=dict(aspectmode='data', aspectratio=dict(x=1, y=1, z=1)))
 # fig.show()
 plt.axis('equal')
 # plt.title(f'{algorithm}_{city}')
 #plt.savefig(f'plot_{algorithm}_{city}.png')
-plt.show()
+# plt.show()
+
+conn = sqlite3.connect('mydata.db')
+c = conn.cursor()
+
+# 테이블 생성
+# c.execute('''CREATE TABLE result (n int, coords text, theta text)''')
+
+# 각 행을 데이터베이스에 저장
+# for index, row in result_df.iterrows():
+#     c.execute("INSERT INTO result (n, coords, theta) VALUES (?, ?, ?)", (row['n'], str(row['coords']), str(row['theta'])))
+#
+# conn.commit()
+c.execute("SELECT * FROM result")
+rows = c.fetchall()
+for row in rows:
+    print(row)
+
+conn.close()
