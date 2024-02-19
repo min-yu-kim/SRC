@@ -2,7 +2,7 @@ import numpy as np
 import open3d as o3d
 import pptk
 import pandas as pd
-import seaborn as sns
+# import seaborn as sns
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d import proj3d
@@ -17,7 +17,7 @@ import math
 
 # data open
 # data = np.loadtxt('filtered_portland.txt')
-data = pd.read_csv('../input/filtered_points_300_sandiego.csv') # 엑셀 파일을 pandas를 통해 읽음 103809x3 행렬이 나옴 여기서 3이 xyz 좌표
+data = pd.read_csv('../input/filtered_points_portland.csv') # 엑셀 파일을 pandas를 통해 읽음 103809x3 행렬이 나옴 여기서 3이 xyz 좌표
 # print(data)
 data = np.array(data) # pandas 데이터를 numpy로 바꾸는데 103809x3행렬로 묶이게 됨. 여기서 데이터는 행끼리 묶임
 # print(data)

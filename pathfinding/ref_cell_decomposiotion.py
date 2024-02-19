@@ -7,7 +7,7 @@ from helpers.geometry import *
 import matplotlib.pyplot as plt
 
 # Check for empty lines
-file_handler = open("input_file", "r")
+file_handler = open("input_file2", "r")
 raw_data = file_handler.read()
 raw_data = raw_data.split("\n")
 

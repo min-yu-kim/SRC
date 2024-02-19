@@ -1,52 +1,120 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import Voronoi
 
-# 비행금지 구역 다각형 정의
-forbidden_polygon = np.array([(2, 2), (2, 6), (6, 6), (6, 2)])
 
-# Voronoi 다이어그램 생성을 위한 점 생성
-points = np.random.uniform(0, 10, (50, 2))  # 50개의 무작위 점 생성
+def generate_obstacles():
+    # 장애물 생성 (다각형의 꼭짓점)
+    obstacle1 = [(2, 3), (4, 7), (7, 5), (5, 2)]
+    obstacle2 = [(8, 2), (10, 6), (13, 4), (11, 1)]
 
-# 비행금지 구역 내부의 점 제거
-def point_inside_polygon(point, polygon):
+    return [obstacle1, obstacle2]
+
+
+def is_point_valid(point, obstacles):
+    # 점이 유효한지 확인 (장애물과 충돌하지 않는지)
+    for obstacle in obstacles:
+        if is_point_inside_polygon(point, obstacle):
+            return False
+    return True
+
+
+def is_point_inside_polygon(point, polygon):
+    # 점이 다각형 안에 있는지 확인
     x, y = point
-    n = len(polygon)
+    poly = np.array(polygon)
+    n = len(poly)
     inside = False
-    p1x, p1y = polygon[0]
-    for i in range(1, n + 1):
-        p2x, p2y = polygon[i % n]
+
+    p1x, p1y = poly[0]
+    for i in range(n + 1):
+        p2x, p2y = poly[i % n]
         if y > min(p1y, p2y):
             if y <= max(p1y, p2y):
                 if x <= max(p1x, p2x):
                     if p1y != p2y:
                         xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
-                    if p1x == p2x or x <= xinters:
-                        inside = not inside
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
         p1x, p1y = p2x, p2y
+
     return inside
 
-points = [point for point in points if not point_inside_polygon(point, forbidden_polygon)]
 
-# Voronoi 다이어그램 생성
-vor = Voronoi(points)
+def generate_random_point():
+    # 무작위로 점 생성
+    return [np.random.uniform(0, 15), np.random.uniform(0, 8)]
 
-# Voronoi 다이어그램 플롯
-plt.figure(figsize=(8, 8))
 
-# 비행금지 구역 플롯
-plt.fill(*zip(*forbidden_polygon), 'gray', alpha=0.5)
+def nearest_neighbor(tree, point):
+    # 가장 가까운 이웃 찾기
+    distances = [np.linalg.norm(np.array(point) - np.array(node)) for node in tree]
+    return tree[np.argmin(distances)]
 
-# Voronoi 다이어그램 엣지 플롯
-for region in vor.regions:
-    if -1 not in region and len(region) > 0:
-        plt.fill(*zip(*[vor.vertices[i] for i in region]), alpha=0.5)
 
-# Voronoi 다이어그램 점 플롯
-plt.plot(points[:, 0], points[:, 1], 'ko')
+def new_point(q_near, q_rand, delta):
+    # 새로운 점 생성
+    direction = np.array(q_rand) - np.array(q_near)
+    direction_normalized = direction / np.linalg.norm(direction)
+    q_new = np.array(q_near) + delta * direction_normalized
+    return q_new.tolist()
 
-# 그래프 출력
-plt.xlim(0, 10)
-plt.ylim(0, 10)
-plt.gca().set_aspect('equal', adjustable='box')
-plt.show()
+
+def rrt(start, goal, obstacles, max_iter=1000, delta=0.5):
+    tree = [start]
+
+    for _ in range(max_iter):
+        q_rand = generate_random_point()
+        q_near = nearest_neighbor(tree, q_rand)
+        q_new = new_point(q_near, q_rand, delta)
+
+        if is_point_valid(q_new, obstacles):
+            tree.append(q_new)
+
+            # 만약 목표에 도달하면 경로 반환
+            if np.linalg.norm(np.array(q_new) - np.array(goal)) < delta:
+                path = [goal]
+                current_node = q_new
+                while current_node != start:
+                    path.append(nearest_neighbor(tree, current_node))
+                    current_node = nearest_neighbor(tree, current_node)
+                path.reverse()
+                return path
+
+    return None
+
+
+def plot_environment(obstacles, start, goal, path=[]):
+    # 환경 그리기
+    fig, ax = plt.subplots()
+
+    for obstacle in obstacles:
+        obstacle.append(obstacle[0])  # 다각형을 닫기 위해 첫 번째 꼭짓점 추가
+        poly = np.array(obstacle)
+        ax.plot(poly[:, 0], poly[:, 1], 'r-', linewidth=2)
+
+    ax.plot(start[0], start[1], 'go', markersize=10, label='Start')
+    ax.plot(goal[0], goal[1], 'bo', markersize=10, label='Goal')
+
+    if path:
+        path_x, path_y = zip(*path)
+        ax.plot(path_x, path_y, 'k-', linewidth=2, label='Path')
+
+    ax.set_aspect('equal', 'box')
+    ax.set_xlim(0, 15)
+    ax.set_ylim(0, 8)
+    ax.legend()
+    plt.show()
+
+
+if __name__ == "__main__":
+    start = [1, 1]
+    goal = [14, 7]
+    obstacles = generate_obstacles()
+
+    path = rrt(start, goal, obstacles)
+
+    if path:
+        print("Path found:", path)
+        plot_environment(obstacles, start, goal, path)
+    else:
+        print("Path not found.")

@@ -13,6 +13,7 @@ class Building:
         self.df_pd = df_pd
         self.cmap = cmap
         self.grid_size = grid_size
+        self.rotated_points = None
 
     def process(self):
         n0 = self.df_pd[self.df_pd['label'] == self.label]
@@ -147,6 +148,7 @@ class Building:
             rotated_coords = np.dot(grid_points, rotation_matrix)
             rotated_coords += pivot
             rotated_coords = np.array(rotated_coords)
+            # print(rotated_coords)
 
             hull3 = ConvexHull(rotated_coords)
             for simplex in hull3.simplices:
@@ -158,6 +160,7 @@ class Building:
         # rotated_coords.append(rotated_coords)
         # plt.axis('equal')
         # plt.show()
+        print(rotated_points)
         return rotated_points
 
     def select_intersecting_grids(self, rotated_points, x, y):
@@ -383,4 +386,8 @@ analysis = DataAnalysis(data, eps, min_samples, algorithm, city, grid_size)
 analysis.process_data()
 
 fig.update_layout(scene=dict(aspectmode='data', aspectratio=dict(x=1, y=1, z=1)))
-fig.show()
+# fig.show()
+
+plt.show()
+
+

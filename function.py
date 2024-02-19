@@ -103,7 +103,7 @@ def DBSCAN(data, eps, min_samples, algorithm, city):
     plt.axis('equal')
     plt.title(f'{algorithm}_{city}')
     # plt.savefig(f'plot_{algorithm}_{city}.png')
-    plt.show()
+    # plt.show()
     return label
 
 
@@ -666,3 +666,19 @@ def plot_corridors(p1, p2, r, fig):
         color_val = "gray"
         fig.add_trace(go.Surface(x=x_sphere, y=y_sphere, z=z_sphere, surfacecolor=colors,
                                      colorscale=[[0, color_val], [1, color_val]], showscale=False, opacity=0.3))
+
+def sample_obstacle(obstacle, sampling_distance=1):
+    sampled_points = []
+    for i in range(len(obstacle) - 1):
+        x1, y1 = obstacle[i]
+        x2, y2 = obstacle[i + 1]
+        distance = ((x2 - x1) ** 2 + (y2 - y1) ** 2) ** 0.5
+        num_samples = int(distance / sampling_distance)
+        if num_samples > 0:
+            x_step = (x2 - x1) / num_samples
+            y_step = (y2 - y1) / num_samples
+            for j in range(num_samples):
+                x = x1 + j * x_step
+                y = y1 + j * y_step
+                sampled_points.append((x, y))
+    return sampled_points
